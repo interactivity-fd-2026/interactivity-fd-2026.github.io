@@ -8,29 +8,29 @@ const CH_LABELS = {
 FDB_V1_DIR = "assets/fdb_v1"
 
 const MOSHI_VARIANTS_V1 = [
-  { label: "Moshi",             key: "moshika-ps3.0-topk25" },
-  { label: "+ RL (Fisher)",     key: "e9b4a3ec-ckpt100-ps3.0", rl: true },
-  { label: "+ RL (Seamless)",   key: "dee3429b-ckpt100-ps3.0", rl: true },
+  { label: "Moshi",                           key: "moshika-ps3.0-topk25" },
+  { label: "+ Our post-training on Fisher",    key: "e9b4a3ec-ckpt100-ps3.0", rl: true },
+  { label: "+ Our post-training on Seamless",  key: "dee3429b-ckpt100-ps3.0", rl: true },
 ];
 
 const PPLEX_VARIANTS_V1 = [
-  { label: "PersonaPlex",       key: "personaplex-ps0.0" },
-  { label: "+ RL (Fisher)",     key: "74a180f1-ckpt100-ps0.0",   rl: true },
-  { label: "+ RL (Seamless)",   key: "7969ff51-ckpt100-ps0.0",   rl: true },
+  { label: "PersonaPlex",                     key: "personaplex-ps0.0" },
+  { label: "+ Our post-training on Fisher",    key: "74a180f1-ckpt100-ps0.0",   rl: true },
+  { label: "+ Our post-training on Seamless",  key: "7969ff51-ckpt100-ps0.0",   rl: true },
 ];
 
 FDB_V2_DIR = "assets/fdb_v2";
 
 const MOSHI_VARIANTS_V2 = [
-  { label: "Moshi",             key: "moshika-fast" },
-  { label: "+ RL (Fisher)",     key: "e9b4a3ec-ckpt100-fast", rl: true },
-  { label: "+ RL (Seamless)",   key: "dee3429b-ckpt100-fast", rl: true },
+  { label: "Moshi",                           key: "moshika-fast" },
+  { label: "+ Our post-training on Fisher",    key: "e9b4a3ec-ckpt100-fast", rl: true },
+  { label: "+ Our post-training on Seamless",  key: "dee3429b-ckpt100-fast", rl: true },
 ];
 
 const PPLEX_VARIANTS_V2 = [
-  { label: "PersonaPlex",       key: "personaplex-casual-fast" },
-  { label: "+ RL (Fisher)",     key: "74a180f1-ckpt100-casual-fast",   rl: true },
-  { label: "+ RL (Seamless)",   key: "7969ff51-ckpt100-casual-fast",   rl: true },
+  { label: "PersonaPlex",                     key: "personaplex-casual-fast" },
+  { label: "+ Our post-training on Fisher",    key: "74a180f1-ckpt100-casual-fast",   rl: true },
+  { label: "+ Our post-training on Seamless",  key: "7969ff51-ckpt100-casual-fast",   rl: true },
 ];
 
 // Layout: <dir>/<taskPath>/<variant-key>.wav  (one stereo file per variant)
@@ -46,32 +46,39 @@ const paths = (dir, taskPath) => (v) => ({
 const v2Groups = (items) => items.map(it => ({
   header: it.model,
   tag: it.task,
-  // Manifest paths keep an `inference/` prefix from the source tree; the assets
-  // tree drops it (assets/fdb_v2/<Task>/<sample>/<key>.wav).
-  rows: it.variants.map(v => ({ ...v, ...paths(FDB_V2_DIR, it.path.replace(/^inference\//, ""))(v) })),
+  // The assets tree drops it (assets/fdb_v2/<Task>/<sample>/<key>.wav).
+  rows: it.variants.map(v => ({ ...v, ...paths(FDB_V2_DIR, it.path)(v) })),
+  note: it.note,
 }));
 
 // Curated (cherry-picked) examples, these point at your existing sample IDs.
 const V2_CURATED = [
-  { task: "Daily",           model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "inference/Daily/Daily.troubleshoot.050" },
-  { task: "Daily",           model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "inference/Daily/Daily.reservations.039" },
-  { task: "Correction",      model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "inference/Correction/Correction.014" },
-  { task: "Correction",      model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "inference/Correction/Correction.010" },
-  { task: "Entity Tracking", model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "inference/EntityTracking/EntityTracking.013" },
-  { task: "Entity Tracking", model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "inference/EntityTracking/EntityTracking.039" },
-  { task: "Safety",          model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "inference/Safety/Safety.health_physical.001" },
+  { task: "Daily",           model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "Daily/Daily.troubleshoot.050",
+    note: "The base model only produces fragmented responses such as backchannels, whereas our models take turns appropriately, e.g., by asking context-relevant questions." },
+  { task: "Daily",           model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "Daily/Daily.reservations.039",
+    note: "The base model fails to take turns, whereas our models take turns appropriately and progress the dialogue smoothly." },
+  { task: "Correction",      model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "Correction/Correction.014",
+    note: "The base model exhibits an unnaturally long delay at the first turn-taking, whereas our models achieve smooth turn-taking." },
+  { task: "Correction",      model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "Correction/Correction.010",
+    note: "The base model fails to properly understand the initial topic and produces inappropriate responses, whereas our models understand the topic correctly and respond with smooth timing." },
+  { task: "Entity Tracking", model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "EntityTracking/EntityTracking.013",
+    note: "The base model aggressively barges into the user's speech with excessive overlap, whereas our models progress the dialogue smoothly without excessive overlap." },
+  { task: "Entity Tracking", model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "EntityTracking/EntityTracking.039",
+    note: "The base model produces unnaturally long utterances, whereas our models gradually elicit the user's requests while maintaining smooth multi-turn dialogue." },
+  { task: "Safety",          model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "Safety/Safety.health_physical.001",
+    note: "The base model tends to interrupt the user's speech, whereas our models do not interrupt and respond at appropriate timings." },
 ];
 
 // Randomly selected examples, same task/model coverage as the curated set.
 const V2_RANDOM = [
-  { task: "Daily",           model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "inference/Daily/Daily.planning.025" },
-  { task: "Daily",           model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "inference/Daily/Daily.troubleshoot.049" },
-  { task: "Correction",      model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "inference/Correction/Correction.027" },
-  { task: "Correction",      model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "inference/Correction/Correction.003" },
-  { task: "Entity Tracking", model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "inference/EntityTracking/EntityTracking.017" },
-  { task: "Entity Tracking", model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "inference/EntityTracking/EntityTracking.033" },
-  { task: "Safety",          model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "inference/Safety/Safety.financial_legal.032" },
-  { task: "Safety",          model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "inference/Safety/Safety.privacy.026" },
+  { task: "Daily",           model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "Daily/Daily.planning.025" },
+  { task: "Daily",           model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "Daily/Daily.troubleshoot.049" },
+  { task: "Correction",      model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "Correction/Correction.027" },
+  { task: "Correction",      model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "Correction/Correction.003" },
+  { task: "Entity Tracking", model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "EntityTracking/EntityTracking.017" },
+  { task: "Entity Tracking", model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "EntityTracking/EntityTracking.033" },
+  { task: "Safety",          model: "Moshi",       variants: MOSHI_VARIANTS_V2, path: "Safety/Safety.financial_legal.032" },
+  { task: "Safety",          model: "PersonaPlex", variants: PPLEX_VARIANTS_V2, path: "Safety/Safety.privacy.026" },
 ];
 
 const SECTIONS = [
@@ -80,11 +87,11 @@ const SECTIONS = [
     id: "fdbv1",
     title: "Full-Duplex-Bench v1",
     tag: "STATIC",
-    desc: "Pre-recorded user audio is fed to each model; the model's generated output is evaluated offline for pause handling, backchanneling, smooth turn-taking, and user interruption.",
+    desc: "Pre-recorded user audio is fed to each model; the model's generated output is evaluated offline for <strong>pause handling</strong>, <strong>backchanneling</strong>, <strong>smooth turn-taking</strong>, and <strong>user interruption</strong>.",
     dimensions: [
       {
         name: "Pause Handling",
-        desc: "The model should stay silent during natural pauses in the user's speech. In these examples, the base models inappropriately begin responding during user pauses or produce long overlaps, whereas the <strong>+ RL</strong> models remain silent or limit themselves to non-turn-taking backchannels, avoiding interruption of the user.",
+        desc: "The model should stay silent during natural pauses in the user's speech. In these examples, the base models inappropriately begin responding during user pauses or produce long overlaps, whereas our models remain silent or limit themselves to non-turn-taking backchannels, avoiding interruption of the user.",
         groups: [
           {
             header: "Moshi",
@@ -98,7 +105,7 @@ const SECTIONS = [
       },
       {
         name: "Backchanneling",
-        desc: "The model should produce backchannels (e.g., \"uh-huh\") at appropriate timings while the user speaks. In these examples, the base models produce few backchannels or even overlap with the user's speech, whereas the <strong>+ RL</strong> models generate more backchannels at appropriate timings.",
+        desc: "The model should produce backchannels (e.g., \"uh-huh\") at appropriate timings while the user speaks. In these examples, the base models produce few backchannels or even overlap with the user's speech, whereas our models generate more backchannels at appropriate timings.",
         groups: [
           {
             header: "Moshi",
@@ -112,7 +119,7 @@ const SECTIONS = [
       },
       {
         name: "Smooth Turn-Taking",
-        desc: "The model should take the turn promptly when the user finishes speaking. In these examples, the base models exhibit noticeably delayed responses, whereas the <strong>+ RL</strong> models begin responding promptly after the user finishes speaking.",
+        desc: "The model should take the turn promptly when the user finishes speaking. In these examples, the base models exhibit noticeably delayed responses, whereas our models begin responding promptly after the user finishes speaking.",
         groups: [
           {
             header: "Moshi",
@@ -126,7 +133,7 @@ const SECTIONS = [
       },
       {
         name: "User Interruption",
-        desc: "The model should stop and shift focus when the user interrupts. In these examples, the base Moshi fails to fully shift the topic after user interruptions, whereas the <strong>+ RL</strong> models recognize the user's interruption and immediately begin responding to the new topic.",
+        desc: "The model should stop and shift focus when the user interrupts. In these examples, the base Moshi fails to fully shift the topic after user interruptions, whereas our models recognize the user's interruption and immediately begin responding to the new topic.",
         groups: [
           {
             header: "Moshi",
@@ -142,11 +149,11 @@ const SECTIONS = [
     id: "fdbv2",
     title: "Full-Duplex-Bench v2",
     tag: "MULTI-TURN",
-    desc: "Real-time multi-turn dialogues with an automated GPT-Realtime examiner; each sample shows the full conversation between the examiner and the model under test. v2 spans four tasks: <strong>Daily</strong>, <strong>Correction</strong>, <strong>Entity Tracking</strong>, and <strong>Safety</strong>. For all tasks, we provide both <strong>curated</strong> and <strong>randomly selected</strong> examples, so that the comparison is not limited to hand-picked cases.</p><p class=\"bench-desc\">Across both, the base models frequently exhibit high response latency, fail to respond entirely, or conversely produce excessive overlaps by intervening at wrong moments. In contrast, the <strong>+ RL</strong> models generate responses and backchannels at appropriate timings without disrupting the conversational flow.",
+    desc: "Real-time multi-turn dialogues with an automated GPT-Realtime examiner; each sample shows the full conversation between the examiner and the model under test. v2 spans four tasks: <strong>Daily</strong>, <strong>Correction</strong>, <strong>Entity Tracking</strong>, and <strong>Safety</strong>. For all tasks, we provide both <strong>curated</strong> and <strong>randomly selected</strong> examples, so that the comparison is not limited to hand-picked cases. Note that in this benchmark, the examiner follows a prescribed task and dialogue flow for each sample, so while the exact wording and output audio vary slightly across runs due to the real-time nature of the interaction, comparisons across models remain controlled.",
     dimensions: [
       {
         name: "Curated examples",
-        desc: "Hand-picked dialogues chosen to illustrate characteristic behaviors. Each block shows one task (chip) and one model; within a block, the base model is compared against its <strong>+ RL</strong> variants under identical conditions.",
+        desc: "Hand-picked dialogues chosen to illustrate characteristic behaviors. Each block shows one task (chip) and one model; within a block.",
         groups: v2Groups(V2_CURATED),
       },
       {
@@ -201,14 +208,10 @@ function buildApp() {
         const tagHtml = group.tag ? `<span class="task-tag">${group.tag}</span>` : "";
         groupEl.innerHTML = `<div class="model-group-header">${tagHtml}<span>${group.header}</span></div>`;
 
-        if (group.note) {
-          groupEl.insertAdjacentHTML("beforeend", `<div class="group-note">${group.note}</div>`);
-        }
-
         for (const row of group.rows) {
           const waveId = uid();
           const labelHtml = row.rl
-            ? `<span class="rl">${row.label.split("(")[0]}</span>(${row.label.split("(")[1]}`
+            ? `<span class="rl">${row.label}</span>`
             : row.label;
 
           const rowEl = document.createElement("div");
@@ -228,6 +231,10 @@ function buildApp() {
 
           // defer WaveSurfer creation
           allRows.push({ el: rowEl, waveId, combinedUrl: row.combined });
+        }
+
+        if (group.note) {
+          groupEl.insertAdjacentHTML("beforeend", `<div class="group-note">${group.note}</div>`);
         }
 
         sec.appendChild(groupEl);
